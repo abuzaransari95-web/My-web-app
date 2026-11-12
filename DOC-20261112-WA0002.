@@ -1,0 +1,204 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chicken Shop Ledger</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;margin:0;background:#f2f4f7;color:#20252b}
+header{background:#173f35;color:white;padding:18px;text-align:center}
+header h2{margin:0}
+nav{display:flex;overflow-x:auto;background:#fff;padding:8px;gap:6px;position:sticky;top:0}
+nav button{border:0;background:#e5ece9;padding:11px;border-radius:7px;white-space:nowrap}
+nav button.active{background:#176b50;color:white}
+main{padding:14px;max-width:900px;margin:auto}
+section{display:none}
+section.active{display:block}
+.card{background:white;padding:15px;border-radius:10px;margin-bottom:14px;box-shadow:0 1px 5px #0001}
+h3{margin-top:0;color:#176b50}
+input,select{width:100%;padding:11px;margin:5px 0 12px;border:1px solid #ccd3d0;border-radius:6px;font-size:16px}
+label{font-size:14px;font-weight:bold}
+button.action{background:#176b50;color:white;border:0;padding:11px 15px;border-radius:6px;font-size:15px}
+button.danger{background:#b83232;color:white;border:0;padding:7px 10px;border-radius:5px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left}
+.tablewrap{overflow-x:auto}
+.summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.metric{background:#edf5f1;padding:12px;border-radius:8px}
+.metric strong{display:block;font-size:19px;margin-top:5px}
+small{color:#65716b}
+</style>
+</head>
+<body>
+<header><h2>Chicken Shop Ledger</h2><small style="color:#dcebe4">Shop Accounts & Payments</small></header>
+
+<nav>
+<button class="active" onclick="showTab('daily',this)">Daily Summary</button>
+<button onclick="showTab('traders',this)">Trader Bills</button>
+<button onclick="showTab('supplies',this)">Shop Supply</button>
+<button onclick="showTab('payments',this)">Weekly Payments</button>
+<button onclick="showTab('balances',this)">Shop Balances</button>
+</nav>
+
+<main>
+<section id="daily" class="active">
+<div class="card">
+<h3>Daily Summary</h3>
+<label>Date</label><input type="date" id="dailyDate">
+<div class="summary">
+<div class="metric">Opening Cash<strong id="openingCash">0.00</strong></div>
+<div class="metric">Cash Received<strong id="cashReceived">0.00</strong></div>
+<div class="metric">Online Received<strong id="onlineReceived">0.00</strong></div>
+<div class="metric">Cash Expenses<strong id="cashExpenses">0.00</strong></div>
+<div class="metric">Online Expenses<strong id="onlineExpenses">0.00</strong></div>
+<div class="metric">Closing Cash<strong id="closingCash">0.00</strong></div>
+<div class="metric">Closing Online<strong id="closingOnline">0.00</strong></div>
+<div class="metric">Net Balance<strong id="netBalance">0.00</strong></div>
+</div>
+</div>
+<div class="card">
+<h3>Add Daily Entry</h3>
+<label>Entry Type</label>
+<select id="entryType">
+<option value="cashin">Cash Received</option>
+<option value="onlinein">Online Received</option>
+<option value="cashexp">Cash Expense</option>
+<option value="onlineexp">Online Expense</option>
+</select>
+<label>Description</label><input id="entryNote" placeholder="Description">
+<label>Amount</label><input id="entryAmount" type="number" min="0" step="0.01" placeholder="Amount">
+<button class="action" onclick="addDaily()">Save Entry</button>
+</div>
+<div class="card"><h3>Daily Entries</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th><th></th></tr></thead><tbody id="dailyRows"></tbody></table></div></div>
+</section>
+
+<section id="traders">
+<div class="card">
+<h3>Add Trader Bill</h3>
+<label>Date</label><input type="date" id="traderDate">
+<label>Trader Name</label><input id="traderName" placeholder="Trader name">
+<label>Incoming KG</label><input type="number" id="traderKg" min="0" step="0.01" placeholder="KG">
+<label>Rate Per KG</label><input type="number" id="traderRate" min="0" step="0.01" placeholder="Rate">
+<label>Cash Paid</label><input type="number" id="traderCash" min="0" step="0.01" value="0">
+<label>Online Paid</label><input type="number" id="traderOnline" min="0" step="0.01" value="0">
+<button class="action" onclick="addTrader()">Save Trader Bill</button>
+</div>
+<div class="card"><h3>Trader Bills</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Trader</th><th>KG</th><th>Rate</th><th>Bill</th><th>Paid</th><th>Due</th><th></th></tr></thead><tbody id="traderRows"></tbody></table></div></div>
+</section>
+
+<section id="supplies">
+<div class="card">
+<h3>Add Shop Supply</h3>
+<label>Date</label><input type="date" id="supplyDate">
+<label>Shop Name</label><input id="supplyShop" placeholder="Customer shop name">
+<label>Quantity KG</label><input type="number" id="supplyKg" min="0" step="0.01" placeholder="KG">
+<label>Rate Per KG</label><input type="number" id="supplyRate" min="0" step="0.01" placeholder="Rate">
+<button class="action" onclick="addSupply()">Save Shop Supply</button>
+</div>
+<div class="card"><h3>Supply Records</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Shop</th><th>KG</th><th>Rate</th><th>Amount</th><th></th></tr></thead><tbody id="supplyRows"></tbody></table></div></div>
+</section>
+
+<section id="payments">
+<div class="card">
+<h3>Add Weekly Payment</h3>
+<label>Payment Date</label><input type="date" id="paymentDate">
+<label>Shop Name</label><input id="paymentShop" placeholder="Shop name">
+<label>Week / Reference</label><input id="paymentWeek" placeholder="Example: Week 1">
+<label>Payment Mode</label><select id="paymentMode"><option>Cash</option><option>Online</option></select>
+<label>Amount Received</label><input type="number" id="paymentAmount" min="0" step="0.01" placeholder="Amount">
+<button class="action" onclick="addPayment()">Save Payment</button>
+</div>
+<div class="card"><h3>Payment Records</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Shop</th><th>Week</th><th>Mode</th><th>Amount</th><th></th></tr></thead><tbody id="paymentRows"></tbody></table></div></div>
+</section>
+
+<section id="balances">
+<div class="card"><h3>Shop Balances</h3><div class="tablewrap"><table><thead><tr><th>Shop</th><th>Total Supply</th><th>Payments</th><th>Outstanding</th></tr></thead><tbody id="balanceRows"></tbody></table></div></div>
+</section>
+
+<div class="card">
+<h3>Data Backup</h3>
+<p><small>Download a backup of your records and keep it somewhere safe.</small></p>
+<button class="action" onclick="backupData()">Download Backup</button>
+</div>
+</main>
+
+<script>
+const KEY="chickenShopLedgerData";
+let data=JSON.parse(localStorage.getItem(KEY)||'{"daily":[],"traders":[],"supplies":[],"payments":[]}');
+const today=new Date().toISOString().slice(0,10);
+["dailyDate","traderDate","supplyDate","paymentDate"].forEach(id=>document.getElementById(id).value=today);
+
+function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
+function money(n){return (Number(n)||0).toFixed(2)}
+function val(id){return document.getElementById(id).value.trim()}
+function num(id){return Number(val(id))||0}
+function safe(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function showTab(id,btn){
+ document.querySelectorAll("main section").forEach(s=>s.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+ btn.classList.add("active");render();
+}
+function removeItem(group,index){
+ if(confirm("Delete this record?")){data[group].splice(index,1);save()}
+}
+function addDaily(){
+ let amount=num("entryAmount");
+ if(!amount||!val("dailyDate"))return alert("Enter date and amount");
+ data.daily.push({date:val("dailyDate"),type:val("entryType"),note:val("entryNote"),amount});
+ document.getElementById("entryNote").value="";document.getElementById("entryAmount").value="";save();
+}
+function addTrader(){
+ let kg=num("traderKg"),rate=num("traderRate");
+ if(!val("traderName")||!kg||!rate)return alert("Enter trader, KG and rate");
+ data.traders.push({date:val("traderDate"),name:val("traderName"),kg,rate,bill:kg*rate,cash:num("traderCash"),online:num("traderOnline")});save();
+ ["traderName","traderKg","traderRate","traderCash","traderOnline"].forEach(id=>document.getElementById(id).value="");
+}
+function addSupply(){
+ let kg=num("supplyKg"),rate=num("supplyRate");
+ if(!val("supplyShop")||!kg||!rate)return alert("Enter shop, KG and rate");
+ data.supplies.push({date:val("supplyDate"),shop:val("supplyShop"),kg,rate,amount:kg*rate});save();
+ ["supplyShop","supplyKg","supplyRate"].forEach(id=>document.getElementById(id).value="");
+}
+function addPayment(){
+ if(!val("paymentShop")||!num("paymentAmount"))return alert("Enter shop and amount");
+ data.payments.push({date:val("paymentDate"),shop:val("paymentShop"),week:val("paymentWeek"),mode:val("paymentMode"),amount:num("paymentAmount")});save();
+ ["paymentShop","paymentWeek","paymentAmount"].forEach(id=>document.getElementById(id).value="");
+}
+function rows(id,html){document.getElementById(id).innerHTML=html}
+function render(){
+ let date=val("dailyDate")||today;
+ let entries=data.daily.filter(x=>x.date===date);
+ let sum=t=>entries.filter(x=>x.type===t).reduce((a,x)=>a+x.amount,0);
+ let ci=sum("cashin"),oi=sum("onlinein"),ce=sum("cashexp"),oe=sum("onlineexp");
+ let opening=Number(localStorage.getItem("openingCash")||0);
+ document.getElementById("openingCash").textContent=money(opening);
+ document.getElementById("cashReceived").textContent=money(ci);
+ document.getElementById("onlineReceived").textContent=money(oi);
+ document.getElementById("cashExpenses").textContent=money(ce);
+ document.getElementById("onlineExpenses").textContent=money(oe);
+ document.getElementById("closingCash").textContent=money(opening+ci-ce);
+ document.getElementById("closingOnline").textContent=money(oi-oe);
+ document.getElementById("netBalance").textContent=money(opening+ci-ce+oi-oe);
+ rows("dailyRows",data.daily.map((x,i)=>`<tr><td>${safe(x.date)}</td><td>${safe(x.type)}</td><td>${safe(x.note)}</td><td>${money(x.amount)}</td><td><button class="danger" onclick="removeItem('daily',${i})">X</button></td></tr>`).join(""));
+ rows("traderRows",data.traders.map((x,i)=>`<tr><td>${safe(x.date)}</td><td>${safe(x.name)}</td><td>${x.kg}</td><td>${money(x.rate)}</td><td>${money(x.bill)}</td><td>${money(x.cash+x.online)}</td><td>${money(x.bill-x.cash-x.online)}</td><td><button class="danger" onclick="removeItem('traders',${i})">X</button></td></tr>`).join(""));
+ rows("supplyRows",data.supplies.map((x,i)=>`<tr><td>${safe(x.date)}</td><td>${safe(x.shop)}</td><td>${x.kg}</td><td>${money(x.rate)}</td><td>${money(x.amount)}</td><td><button class="danger" onclick="removeItem('supplies',${i})">X</button></td></tr>`).join(""));
+ rows("paymentRows",data.payments.map((x,i)=>`<tr><td>${safe(x.date)}</td><td>${safe(x.shop)}</td><td>${safe(x.week)}</td><td>${safe(x.mode)}</td><td>${money(x.amount)}</td><td><button class="danger" onclick="removeItem('payments',${i})">X</button></td></tr>`).join(""));
+ let shops=[...new Set([...data.supplies.map(x=>x.shop),...data.payments.map(x=>x.shop)])];
+ rows("balanceRows",shops.map(shop=>{
+  let supply=data.supplies.filter(x=>x.shop===shop).reduce((a,x)=>a+x.amount,0);
+  let paid=data.payments.filter(x=>x.shop===shop).reduce((a,x)=>a+x.amount,0);
+  return `<tr><td>${safe(shop)}</td><td>${money(supply)}</td><td>${money(paid)}</td><td>${money(supply-paid)}</td></tr>`;
+ }).join(""));
+}
+function backupData(){
+ let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+ let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="Chicken_Shop_Ledger_Backup.json";a.click();URL.revokeObjectURL(a.href);
+}
+document.getElementById("dailyDate").addEventListener("change",render);
+render();
+</script>
+</body>
+</html>
